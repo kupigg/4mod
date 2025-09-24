@@ -1,3 +1,7 @@
+### Docker start
+`docker compose up -d`
+
+
 #### Create topics
 
 
