@@ -1,64 +1,29 @@
-### Docker start
-`docker compose up -d`
+
+### Client Api
+
+#### Поиск товаров и получение рекомендаций
+
+  Для рекомендаций необходимо настроить авторизацию и персонализрованно выдавать их. Не настраивала jwt авторизацию, оставила заглушки для определения пользователя
+
+  - `/product/search` запрос в постгрес, публикация данных в кафка для их последующей обработки сервисом (получения рекомендаций)
+  - `/product/get_recommendations` получение рекомендаций
+
+start: `python3 client_api/start_client_api.py`
 
 
-#### Create topics
+Для переноса данных в HDFS, запустить `python3 hdfs_connector.py`
+
+### Потоковая обработка данных
+[Faust Readme](./faust_app/README.md)
+<!-- После публикации товара все попадают в топик 'publish_products'.
+Для блокировки товара необходимо отправить поле и значение в топик 'blocked_teg_products', чтобы заблокировать продукты которые им соответствуют
+Faust Обрабатывает все сообщения в топике 'publish_products' и если в таблице заблокированных(ключ:значениях) продуктов нет, то он отправляет все в топик 'filtered_products' -->
+
+### Сохранение продуктов в postgres(Лучше, конечно с эластиком для полнотекстового поиска, но времени нет)
+
+запустить `python3 consumer_filtered_products.py`
 
 
-```
-docker exec -it kafka-0 kafka-topics \
-  --bootstrap-server kafka-0:9092 \
-  --command-config /etc/kafka/secrets/admin.properties \
-  --create --topic topic-1 \
-  --partitions 3 \
-  --replication-factor 3
-```
 
-```
-docker exec -it kafka-0 kafka-topics \
-  --bootstrap-server kafka-0:9092 \
-  --command-config /etc/kafka/secrets/admin.properties \
-  --create --topic topic-2 \
-  --partitions 3 \
-  --replication-factor 3
-```
-
-### Settings ACL
- - Producer rights to record in the topic-1
-
-```
-docker exec -it kafka-0 kafka-acls \
-  --bootstrap-server kafka-0:9092 \
-  --command-config /etc/kafka/secrets/admin.properties \
-  --add \
-  --allow-principal User:producer \
-  --operation Write \
-  --topic topic-1
-```
-
- - Consumer rights to read in the topic-1
-
- ```
- docker exec -it kafka-0 kafka-acls \
-  --bootstrap-server kafka-0:9092 \
-  --command-config /etc/kafka/secrets/admin.properties \
-  --add \
-  --allow-principal User:consumer \
-  --operation Read \
-  --topic topic-1 \
-  --group consumer-ssl-group
-```
-
-
- - Producer rights to record in the topic-2
- ```
-docker exec -it kafka-0 kafka-acls \
-  --bootstrap-server kafka-0:9092 \
-  --command-config /etc/kafka/secrets/admin.properties \
-  --add \
-  --allow-principal User:producer \
-  --operation Write \
-  --topic topic-2
-```
 
 
